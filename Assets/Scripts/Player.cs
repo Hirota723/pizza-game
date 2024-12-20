@@ -65,6 +65,12 @@ public class Player : MonoBehaviour
         {
             _HitEnemy(collision.gameObject);
         }
+        else if (collision.gameObject.tag == "Goal")
+        {
+            FindObjectOfType<MainManager>().ShowGameClearUI();
+            enabled = false;
+            GetComponent<PlayerInput>().enabled = false;
+        }
     }
 
     private void _HitGround()
@@ -122,6 +128,17 @@ public class Player : MonoBehaviour
     private void _Dead()
     {
         if (_hp <= 0)
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void OnBecameInvisible()
+    {
+        Camera camera = Camera.main;
+
+        if (camera == null) return;
+        if (camera.name == "Main Camera" && camera.transform.position.y > transform.position.y)
         {
             Destroy(gameObject);
         }
