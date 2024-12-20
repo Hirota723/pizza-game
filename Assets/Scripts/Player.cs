@@ -9,6 +9,8 @@ public class Player : MonoBehaviour
     private float _moveSpeed;
     [SerializeField, Header("ジャンプ速度")]
     private float _jumpSpeed;
+    [SerializeField, Header("体力")]
+    private int _hp;
 
     private Vector2 _inputDirection;
     private Rigidbody2D _rigid;
@@ -25,6 +27,7 @@ public class Player : MonoBehaviour
     void Update()
     {
         _Move();
+        Debug.Log(_hp);
     }
 
     private void _Move()
@@ -37,6 +40,33 @@ public class Player : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             _bJump = false;
+        }
+        if (collision.gameObject.CompareTag("Enemy"))
+        {
+            _HitEnemy(collision.gameObject);
+        }
+    }
+
+    private void _HitEnemy(GameObject enemy)
+    {
+        float halfScaleY = transform.lossyScale.y / 2.0f;
+        float enemyHalfScaleY = enemy.transform.lossyScale.y / 2.0f;
+        if (transform.position.y - (halfScaleY - 0.1f) >= enemy.transform.position.y + (enemyHalfScaleY - 0.1f))
+        {
+            Destroy(enemy);
+            _rigid.AddForce(Vector2.up * _jumpSpeed, ForceMode2D.Impulse);
+        }
+        else
+        {
+            enemy.GetComponent<Enemy>().PlayerDamage(this);
+        }
+    }
+
+    private void _Dead()
+    {
+        if (_hp <= 0)
+        {
+            Destroy(gameObject);
         }
     }
 
@@ -51,5 +81,16 @@ public class Player : MonoBehaviour
 
         _rigid.AddForce(Vector2.up * _jumpSpeed, ForceMode2D.Impulse);
         _bJump = true;
+    }
+
+    public void Damage(int damage)
+    {
+        _hp = Mathf.Max(_hp - damage, 0);
+        _Dead();
+    }
+
+    public int GetHP()
+    {
+        return _hp;
     }
 }
