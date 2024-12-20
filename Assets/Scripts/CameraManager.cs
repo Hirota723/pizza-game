@@ -10,6 +10,7 @@ public class CameraManager : MonoBehaviour
     private float _shakeMagnitude;
 
     private Player _player;
+    private Vector3 _initPos;
     private float _shakeCount;
     private int _currentPlayerHP;
 
@@ -18,12 +19,14 @@ public class CameraManager : MonoBehaviour
     {
         _player = FindObjectOfType<Player>();
         _currentPlayerHP = _player.GetHP();
+        _initPos = transform.position;
     }
 
     // Update is called once per frame
     void Update()
     {
         _ShakeCheck();
+        _FollowPlayer();
     }
 
     private void _ShakeCheck()
@@ -52,5 +55,12 @@ public class CameraManager : MonoBehaviour
         }
 
         transform.position = initPos;
+    }
+
+    private void _FollowPlayer()
+    {
+        float x = _player.transform.position.x;
+        x = Mathf.Clamp(x, _initPos.x, Mathf.Infinity);
+        transform.position = new Vector3(x, transform.position.y, transform.position.z);
     }
 }

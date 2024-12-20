@@ -36,11 +36,13 @@ public class Player : MonoBehaviour
     {
         _Move();
         _LookMoveDirection();
+        _HitGround();
         Debug.Log(_hp);
     }
 
     private void _Move()
     {
+        // if (_bJump) return;
         _rigid.velocity = new Vector2(_inputDirection.x * _moveSpeed, _rigid.velocity.y);
         _anim.SetBool("Walk", _inputDirection.x != 0.0f);
     }
@@ -59,16 +61,29 @@ public class Player : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Ground"))
+        if (collision.gameObject.tag == "Enemy")
+        {
+            _HitEnemy(collision.gameObject);
+        }
+    }
+
+    private void _HitGround()
+    {
+        int layerMask = LayerMask.GetMask("Ground");
+        Vector3 rayPos = transform.position - new Vector3(0.0f, transform.lossyScale.y / 2.0f);
+        Vector3 raySize = new Vector3(transform.lossyScale.x - 0.1f, 0.1f);
+        RaycastHit2D rayHit = Physics2D.BoxCast(rayPos, raySize, 0.0f, Vector2.zero, 0.0f, layerMask);
+        if (rayHit.transform == null)
+        {
+            _bJump = true;
+            _anim.SetBool("Jump", _bJump);
+            return;
+        }
+
+        if (rayHit.transform.tag == "Ground" && _bJump)
         {
             _bJump = false;
             _anim.SetBool("Jump", _bJump);
-        }
-        if (collision.gameObject.CompareTag("Enemy"))
-        {
-            _HitEnemy(collision.gameObject);
-            gameObject.layer = LayerMask.NameToLayer("PlayerDamage");
-            StartCoroutine(_Damage());
         }
     }
 
@@ -84,6 +99,8 @@ public class Player : MonoBehaviour
         else
         {
             enemy.GetComponent<Enemy>().PlayerDamage(this);
+            gameObject.layer = LayerMask.NameToLayer("PlayerDamage");
+            StartCoroutine(_Damage());
         }
     }
 
@@ -120,8 +137,6 @@ public class Player : MonoBehaviour
         if (!context.performed || _bJump) return;
 
         _rigid.AddForce(Vector2.up * _jumpSpeed, ForceMode2D.Impulse);
-        _bJump = true;
-        _anim.SetBool("Jump", _bJump);
     }
 
     public void Damage(int damage)
