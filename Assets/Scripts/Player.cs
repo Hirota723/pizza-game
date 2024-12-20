@@ -11,15 +11,23 @@ public class Player : MonoBehaviour
     private float _jumpSpeed;
     [SerializeField, Header("体力")]
     private int _hp;
+    [SerializeField, Header("無敵時間")]
+    private float _damageTime;
+    [SerializeField, Header("点滅時間")]
+    private float _flashTime;
 
     private Vector2 _inputDirection;
     private Rigidbody2D _rigid;
+    private Animator _anim;
+    private SpriteRenderer _spriteRenderer;
     private bool _bJump;
 
     // Start is called before the first frame update
     void Start()
     {
         _rigid = GetComponent<Rigidbody2D>();
+        _anim = GetComponent<Animator>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
         _bJump = false;
     }
 
@@ -27,12 +35,26 @@ public class Player : MonoBehaviour
     void Update()
     {
         _Move();
+        _LookMoveDirection();
         Debug.Log(_hp);
     }
 
     private void _Move()
     {
         _rigid.velocity = new Vector2(_inputDirection.x * _moveSpeed, _rigid.velocity.y);
+        _anim.SetBool("Walk", _inputDirection.x != 0.0f);
+    }
+
+    private void _LookMoveDirection()
+    {
+        if (_inputDirection.x > 0.0f)
+        {
+            transform.eulerAngles = Vector3.zero;
+        }
+        else if (_inputDirection.x < 0.0f)
+        {
+            transform.eulerAngles = new Vector3(0.0f, 180.0f, 0.0f);
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -40,10 +62,13 @@ public class Player : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             _bJump = false;
+            _anim.SetBool("Jump", _bJump);
         }
         if (collision.gameObject.CompareTag("Enemy"))
         {
             _HitEnemy(collision.gameObject);
+            gameObject.layer = LayerMask.NameToLayer("PlayerDamage");
+            StartCoroutine(_Damage());
         }
     }
 
@@ -60,6 +85,21 @@ public class Player : MonoBehaviour
         {
             enemy.GetComponent<Enemy>().PlayerDamage(this);
         }
+    }
+
+    IEnumerator _Damage()
+    {
+        Color color = _spriteRenderer.color;
+        for (int i = 0; i < _damageTime; i++)
+        {
+            yield return new WaitForSeconds(_flashTime);
+            _spriteRenderer.color = new Color(color.r, color.g, color.b, 0.0f);
+
+            yield return new WaitForSeconds(_flashTime);
+            _spriteRenderer.color = new Color(color.r, color.g, color.b, 1.0f);
+        }
+        _spriteRenderer.color = color;
+        gameObject.layer = LayerMask.NameToLayer("Default");
     }
 
     private void _Dead()
@@ -81,6 +121,7 @@ public class Player : MonoBehaviour
 
         _rigid.AddForce(Vector2.up * _jumpSpeed, ForceMode2D.Impulse);
         _bJump = true;
+        _anim.SetBool("Jump", _bJump);
     }
 
     public void Damage(int damage)
