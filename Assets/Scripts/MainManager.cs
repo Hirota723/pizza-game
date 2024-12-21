@@ -19,6 +19,21 @@ public class MainManager : MonoBehaviour
     {
         _player = FindObjectOfType<Player>().gameObject;
         _bShowUI = false;
+        FindObjectOfType<Fade>().FadeStart(_MainStart);
+        _player.GetComponent<Player>().enabled = false;
+        foreach (EnemySpawner enemySpawner in FindObjectsOfType<EnemySpawner>())
+        {
+            enemySpawner.enabled = false;
+        }
+    }
+
+    private void _MainStart()
+    {
+        _player.GetComponent<Player>().enabled = true;
+        foreach (EnemySpawner enemySpawner in FindObjectsOfType<EnemySpawner>())
+        {
+            enemySpawner.enabled = true;
+        }
     }
 
     // Update is called once per frame
