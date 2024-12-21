@@ -6,6 +6,9 @@ using UnityEngine.SceneManagement;
 
 public class TitleManager : MonoBehaviour
 {
+    [SerializeField, Header("決定音")]
+    private GameObject _submitSE;
+
     private bool _bStart;
     private Fade _fade;
     // Start is called before the first frame update
@@ -38,6 +41,13 @@ public class TitleManager : MonoBehaviour
         {
             _fade.FadeStart(_ChangeScene);
             _bStart = false;
+            Instantiate(_submitSE);
         }
+    }
+
+    public void OnEscape(InputAction.CallbackContext context)
+    {
+        if (!context.performed) return;
+        Application.Quit();
     }
 }
